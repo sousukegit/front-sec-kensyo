@@ -1,103 +1,216 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [userInput, setUserInput] = useState("");
+  const [safeOutput, setSafeOutput] = useState("");
+  const [dangerousOutput, setDangerousOutput] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // XSSテスト用のサンプルペイロード
+  const xssPayloads = [
+    '<script>alert("XSS Attack!")</script>',
+    '<img src="x" onerror="alert(\'XSS via img\')" />',
+    "<svg onload=\"alert('XSS via SVG')\" />",
+    "<iframe src=\"javascript:alert('XSS via iframe')\" />",
+    'javascript:alert("XSS")',
+    "<body onload=\"alert('XSS via body')\" />",
+  ];
+
+  const handleTest = () => {
+    setSafeOutput(userInput);
+    setDangerousOutput(userInput);
+  };
+
+  const handlePayloadTest = (payload: string) => {
+    setUserInput(payload);
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white p-8">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-4">React XSS 検証フォーム</h1>
+          <p className="text-gray-300">
+            Reactのデフォルトサニタイズ機能と dangerouslySetInnerHTML
+            の違いを検証
+          </p>
+        </header>
+
+        {/* メインフォーム */}
+        <div className="bg-gray-900 p-8 rounded-lg border border-gray-700 mb-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleTest();
+            }}
+            className="space-y-6"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <div>
+              <label
+                htmlFor="xss-input"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                XSSペイロード入力
+              </label>
+              <textarea
+                id="xss-input"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="XSSペイロードを入力してください..."
+                className="w-full h-32 p-4 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-gray-500 focus:outline-none resize-none"
+                required
+              />
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              >
+                🔍 XSS検証を実行
+              </button>
+            </div>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* XSSペイロードサンプル */}
+        <div className="bg-gray-900 p-6 rounded-lg border border-gray-700 mb-8">
+          <h2 className="text-xl font-semibold mb-4">
+            📋 XSSペイロードサンプル
+          </h2>
+          <p className="text-gray-400 mb-6 text-sm">
+            以下のサンプルをクリックすると、上の入力フィールドに自動的に入力されます
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {xssPayloads.map((payload, index) => (
+              <div
+                key={index}
+                className="bg-gray-800 p-4 rounded-lg border border-gray-600 hover:border-gray-500 transition-colors"
+              >
+                <div className="mb-3">
+                  <span className="text-xs text-gray-400 font-medium">
+                    サンプル {index + 1}
+                  </span>
+                </div>
+                <code className="text-sm text-gray-300 block mb-3 break-all">
+                  {payload}
+                </code>
+                <button
+                  onClick={() => handlePayloadTest(payload)}
+                  className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors border border-gray-600 hover:border-gray-500"
+                >
+                  📝 フォームに入力
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 結果表示エリア - テスト実行後にのみ表示 */}
+        {(safeOutput || dangerousOutput) && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-6 text-center">
+              🔍 検証結果
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* 安全な出力（Reactデフォルト） */}
+              <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                <h3 className="text-xl font-semibold mb-4 text-green-400">
+                  ✅ 安全な出力（Reactデフォルト）
+                </h3>
+                <p className="text-gray-300 mb-4">
+                  Reactが自動的にエスケープ処理を行います
+                </p>
+                <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-green-400">
+                  <h4 className="font-mono text-sm text-gray-400 mb-2">
+                    出力結果:
+                  </h4>
+                  <div className="text-white min-h-[2rem] bg-gray-900 p-3 rounded border">
+                    {safeOutput}
+                  </div>
+                </div>
+                <div className="mt-4 text-sm text-gray-400">
+                  <strong>仕組み:</strong> React は JSX
+                  内でテキストを表示する際、 自動的に HTML
+                  エンティティをエスケープします。 そのため、&lt;script&gt;
+                  タグなどは文字列として表示され、実行されません。
+                </div>
+              </div>
+
+              {/* 危険な出力（dangerouslySetInnerHTML） */}
+              <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                <h3 className="text-xl font-semibold mb-4 text-red-400">
+                  ⚠️ 危険な出力（dangerouslySetInnerHTML）
+                </h3>
+                <p className="text-gray-300 mb-4">
+                  HTMLとして直接レンダリングされます（危険）
+                </p>
+                <div className="bg-gray-800 p-4 rounded-lg border-l-4 border-red-400">
+                  <h4 className="font-mono text-sm text-gray-400 mb-2">
+                    出力結果:
+                  </h4>
+                  <div className="text-white min-h-[2rem] bg-gray-900 p-3 rounded border">
+                    <div
+                      dangerouslySetInnerHTML={{ __html: dangerousOutput }}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 text-sm text-gray-400">
+                  <strong>注意:</strong> dangerouslySetInnerHTML を使用すると、
+                  入力された内容がそのまま HTML として実行されます。
+                  悪意のあるスクリプトが含まれている場合、XSS攻撃が成功します。
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 説明セクション */}
+        <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+          <h2 className="text-xl font-semibold mb-6">
+            📚 セキュリティのポイント
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+              <h3 className="font-semibold text-green-400 mb-3">
+                ✅ Reactの安全な機能
+              </h3>
+              <ul className="text-gray-300 space-y-2 text-sm">
+                <li className="flex items-start">
+                  <span className="text-green-400 mr-2">•</span>
+                  JSX内のテキストは自動的にエスケープされる
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-400 mr-2">•</span>
+                  ユーザー入力をそのまま表示しても安全
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-400 mr-2">•</span>
+                  デフォルトでXSS攻撃を防ぐ
+                </li>
+              </ul>
+            </div>
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+              <h3 className="font-semibold text-red-400 mb-3">⚠️ 危険な機能</h3>
+              <ul className="text-gray-300 space-y-2 text-sm">
+                <li className="flex items-start">
+                  <span className="text-red-400 mr-2">•</span>
+                  dangerouslySetInnerHTML は名前の通り危険
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-400 mr-2">•</span>
+                  HTMLを直接レンダリングするため、スクリプトが実行される
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-400 mr-2">•</span>
+                  使用する場合は必ず入力値のサニタイズが必要
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
